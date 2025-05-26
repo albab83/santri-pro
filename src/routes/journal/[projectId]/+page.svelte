@@ -139,7 +139,7 @@
 
       <form on:submit|preventDefault={kirimJurnal} class="space-y-6">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Isi Jurnal</label>
+          <label for="isi" class="block text-sm font-medium text-gray-700 mb-2">Isi Jurnal</label>
           <textarea
             class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors resize-none"
             rows="6"
@@ -150,7 +150,7 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Status (Opsional)</label>
+          <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status (Opsional)</label>
           <select
             class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
             bind:value={status}
