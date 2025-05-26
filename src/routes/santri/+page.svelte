@@ -147,7 +147,7 @@ onDestroy(() => {
             </svg>
           </div>
           <div>
-            <h1 class="text-3xl xs:text-xs font-bold text-gray-900">
+            <h1 class="text-[20px] sm:text-2xl md:text-3xl lg:text-3xl font-bold text-gray-900">
               Assalamu'alaikum Selamat Datang {user?.nama}, di Self Project
             </h1>
             <p class="text-gray-600">Kelola dan ajukan project mandiri Anda </p>
@@ -164,16 +164,16 @@ onDestroy(() => {
           <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
           </svg>
-          <h2 class="text-2xl font-bold text-gray-900">Project Saya</h2>
+          <h2 class="text-[20px] sm:text-2xl md:text-2xl lg:text-2xl font-bold text-gray-900">Project Saya</h2>
         </div>
         <button
           on:click={openModal}
           class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-2"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
-          <span>Ajukan Project Baru</span>
+          <span class="hidden sm:block">Ajukan Project Baru</span>
         </button>
       </div>
 
