@@ -147,7 +147,9 @@ onDestroy(() => {
             </svg>
           </div>
           <div>
-            <h1 class="text-3xl font-bold text-gray-900"> Assalamu'alaikum Selamat Datang {user?.nama}, di Self Project</h1>
+            <h1 class="text-3xl xs:text-xs font-bold text-gray-900">
+              Assalamu'alaikum Selamat Datang {user?.nama}, di Self Project
+            </h1>
             <p class="text-gray-600">Kelola dan ajukan project mandiri Anda </p>
           </div>
         </div>
