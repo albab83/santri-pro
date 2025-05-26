@@ -252,8 +252,8 @@ onDestroy(() => {
 
 <!-- Modal -->
 {#if showModal}
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-screen overflow-y-auto">
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl h-9/10 overflow-y-auto ">
       <!-- Modal Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-200">
         <div class="flex items-center space-x-3">
@@ -279,7 +279,7 @@ onDestroy(() => {
       </div>
 
       <!-- Modal Body -->
-      <div class="p-6">
+      <div class="m-4 p-6">
         <form on:submit|preventDefault={handleSubmit} class="space-y-6">
           <!-- Judul Field -->
           <div class="space-y-2">
