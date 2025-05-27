@@ -15,6 +15,29 @@
 
   const baseUrl = import.meta.env.VITE_API_BASE_URL 
 
+  //tandaiSelesai
+
+  async function tandaiSelesai(projectId: string) {
+  if (!confirm('Yakin ingin menandai project ini sebagai selesai?')) return;
+  try {
+    const res = await fetch(`${baseUrl}/api/project/${projectId}/finish`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    const data = await res.json();
+    if (res.ok) {
+      message = 'Project berhasil diselesaikan!';
+      await fetchMyProjects();
+    } else {
+      message = data.message || 'Gagal menyelesaikan project';
+    }
+  } catch (err) {
+    message = 'Terjadi kesalahan koneksi';
+  }
+}
+
    // Ambil data user dari token
   async function fetchUser() {
     
@@ -241,6 +264,12 @@ onDestroy(() => {
                         >
                         Buka Jurnal
                         </button>
+                        <button
+                          on:click={() => tandaiSelesai(project.id)}
+                          class="w-full text-center bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition"
+                        >
+                          Tandai Selesai
+                         </button>
                     </div>
                 {/if}
               </div>
