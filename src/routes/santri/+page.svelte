@@ -262,7 +262,13 @@ onDestroy(() => {
 
                 {#if project.status?.toLowerCase() === 'diterima' || project.status?.toLowerCase() === 'approved'}
                     <div class="mt-4">
-                        <button
+                      <button
+                        on:click={() => bukaHalamanJurnal(project.id)}
+                        class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition"
+                        >
+                        Buka Jurnal
+                      </button>
+                      <button
                         on:click={() => tandaiSelesai(project.id)}
                         class="mt-4 w-full text-center bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition"
                         disabled={loadingProjectId === project.id}
