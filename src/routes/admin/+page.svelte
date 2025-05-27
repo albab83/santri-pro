@@ -48,6 +48,7 @@
 		{ label: 'Diterima', value: stats.projectDiterima, color: '#10B981' },
 		{ label: 'Menunggu', value: stats.projectMenunggu, color: '#F59E0B' },
 		{ label: 'Ditolak', value: stats.projectDitolak, color: '#EF4444' }
+    { label: 'Selesai', value: stats.projectSelesai, color: '#34D399' }
 	];
 
 	function getStatusColor(status: string) {
@@ -286,29 +287,27 @@
 					</div>
 				</div>
 			</div>
-		</div>
-
-		<!-- ...existing cards... -->
-		<div class="bg-white rounded-xl shadow-lg p-6">
-			<div class="flex items-center">
-				<div class="p-2 bg-emerald-100 rounded-lg">
-					<svg
-						class="w-6 h-6 text-emerald-600"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M5 13l4 4L19 7"
-						/>
-					</svg>
-				</div>
-				<div class="ml-4">
-					<p class="text-sm font-medium text-gray-600">Selesai</p>
-					<p class="text-2xl font-bold text-gray-900">{stats.projectSelesai}</p>
+			<div class="bg-white rounded-xl shadow-lg p-6">
+				<div class="flex items-center">
+					<div class="p-2 bg-emerald-100 rounded-lg">
+						<svg
+							class="w-6 h-6 text-emerald-600"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M5 13l4 4L19 7"
+							/>
+						</svg>
+					</div>
+					<div class="ml-4">
+						<p class="text-sm font-medium text-gray-600">Selesai</p>
+						<p class="text-2xl font-bold text-gray-900">{stats.projectSelesai}</p>
+					</div>
 				</div>
 			</div>
 		</div>
