@@ -23,11 +23,24 @@
 	let alasan: { [key: number]: string } = {};
 	let loadingId: number | null = null;
 	let intervalId: number | undefined;
+	let users: User[] = [];
 	const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
+	async function fetchUsers() {
+		try {
+			const res = await fetch(`${baseUrl}/api/users`, {
+				headers: { Authorization: `Bearer ${token}` }
+			});
+			if (!res.ok) throw new Error('Gagal mengambil data user');
+			users = await res.json();
+		} catch (err) {
+			// Optional: handle error
+		}
+	}
 
 	// Statistics computed from projects
 	$: stats = {
-		totalSantri: [...new Set(projects.map((p) => p.User?.email).filter(Boolean))].length,
+		totalSantri: users.filter((u) => u.role === 'santri').length,
 		totalProject: projects.length,
 		projectDiterima: projects.filter(
 			(p) => p.status.toLowerCase() === 'diterima' || p.status.toLowerCase() === 'approved'
@@ -80,6 +93,7 @@
 	onMount(() => {
 		token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 		fetchProjects();
+		fetchUsers();
 		intervalId = setInterval(fetchProjects, 10000); // refresh tiap 10 detik
 	});
 
