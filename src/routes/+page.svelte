@@ -5,7 +5,7 @@
 	let message = '';
 	let isLoading = false;
 	let showPassword = false;
-	const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+	const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 	async function handleLogin() {
 		message = '';

@@ -17,7 +17,6 @@
 	let message = '';
 	let error = '';
 	let loading = false;
-
 	let projectId = '';
 	let projectName = '';
 	let editId: string | number | null = null;
