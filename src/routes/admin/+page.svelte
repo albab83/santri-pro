@@ -47,7 +47,7 @@
 	$: chartData = [
 		{ label: 'Diterima', value: stats.projectDiterima, color: '#10B981' },
 		{ label: 'Menunggu', value: stats.projectMenunggu, color: '#F59E0B' },
-		{ label: 'Ditolak', value: stats.projectDitolak, color: '#EF4444' }
+		{ label: 'Ditolak', value: stats.projectDitolak, color: '#EF4444' },
     { label: 'Selesai', value: stats.projectSelesai, color: '#34D399' }
 	];
 
