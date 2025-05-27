@@ -3,7 +3,9 @@
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
 
+
   interface Journal {
+    id: number | string;
     created_at: string;
     isi: string;
     status?: string;
@@ -19,6 +21,8 @@
 
   let projectId = '';
   let projectName = '';
+  let editId: string | number | null = null;
+  let formEl: HTMLFormElement | null = null; // referensi DOM form
 
   const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
@@ -27,6 +31,19 @@
     projectId = $page.params.projectId;
     await loadJournals();
   });
+
+
+  function scrollToForm() {
+    formEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function startEdit(journal: Journal) {
+    isi = journal.isi;
+    status = journal.status || '';
+    editId = journal.id;
+    scrollToForm();
+
+  }
 
   async function loadJournals() {
     loading = true;
@@ -52,32 +69,47 @@
     }
   }
 
-  async function kirimJurnal() {
+  async function kirimJurnal(event?: Event) {
+    if (event) event.preventDefault();
     message = '';
     error = '';
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${baseUrl}/api/journal/${projectId}`, {
-        method: 'POST',
+      const method = editId ? 'PUT' : 'POST';
+      const endpoint = editId
+        ? `${baseUrl}/api/journal/${editId}`
+        : `${baseUrl}/api/journal/${projectId}`;
+
+      const res = await fetch(endpoint, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ isi, status })
       });
-      const data = await res.json();
+      let data: any = {};
+      const contentType = res.headers.get('Content-Type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        data = { message: 'Response tidak dalam format JSON' };
+      }
       if (res.ok) {
-        message = 'Jurnal berhasil dikirim';
+        message = editId ? 'Jurnal berhasil diperbarui' : 'Jurnal berhasil dikirim';
         isi = '';
         status = '';
+        editId = null;
         await loadJournals();
       } else {
-        error = data.message || 'Gagal mengirim jurnal';
+        error = data.message || 'Gagal menyimpan jurnal';
       }
     } catch (e) {
-      error = 'Terjadi kesalahan saat mengirim jurnal';
+      
+      error = 'Terjadi kesalahan saat menyimpan jurnal';
     }
   }
+
 
   function formatDate(dateString: string) {
     const date = new Date(dateString);
@@ -137,7 +169,7 @@
         <h2 class="text-2xl font-bold text-gray-900">Tulis Jurnal Baru</h2>
       </div>
 
-      <form on:submit|preventDefault={kirimJurnal} class="space-y-6">
+      <form onsubmit={kirimJurnal} bind:this={formEl} class="space-y-6">
         <div>
           <label for="isi" class="block text-sm font-medium text-gray-700 mb-2">Isi Jurnal</label>
           <textarea
@@ -179,7 +211,7 @@
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
               </svg>
-              <span>Kirim Jurnal</span>
+              <span> {editId ? 'Update Jurnal' : 'Kirim Jurnal'}</span>
             {/if}
           </button>
         </div>
@@ -254,9 +286,11 @@
                     {/if}
                   </div>
                 </div>
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                </svg>
+                <button onclick={() => startEdit(journal)} aria-label="Edit jurnal">
+                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                  </svg>
+                </button>
               </div>
               
               <div class="prose prose-sm max-w-none">
