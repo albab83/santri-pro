@@ -37,6 +37,9 @@
 		).length,
 		projectDitolak: projects.filter(
 			(p) => p.status.toLowerCase() === 'ditolak' || p.status.toLowerCase() === 'rejected'
+		).length,
+		projectSelesai: projects.filter(
+			(p) => p.status.toLowerCase() === 'selesai' || p.status.toLowerCase() === 'completed'
 		).length
 	};
 
@@ -281,6 +284,31 @@
 						<p class="text-sm font-medium text-gray-600">Ditolak</p>
 						<p class="text-2xl font-bold text-gray-900">{stats.projectDitolak}</p>
 					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- ...existing cards... -->
+		<div class="bg-white rounded-xl shadow-lg p-6">
+			<div class="flex items-center">
+				<div class="p-2 bg-emerald-100 rounded-lg">
+					<svg
+						class="w-6 h-6 text-emerald-600"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M5 13l4 4L19 7"
+						/>
+					</svg>
+				</div>
+				<div class="ml-4">
+					<p class="text-sm font-medium text-gray-600">Selesai</p>
+					<p class="text-2xl font-bold text-gray-900">{stats.projectSelesai}</p>
 				</div>
 			</div>
 		</div>
