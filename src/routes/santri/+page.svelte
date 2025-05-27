@@ -20,7 +20,7 @@
   async function tandaiSelesai(projectId: string) {
   if (!confirm('Yakin ingin menandai project ini sebagai selesai?')) return;
   try {
-    const res = await fetch(`${baseUrl}/api/project/${projectId}/finish`, {
+    const res = await fetch(`${baseUrl}/api/project/${projectId}/status`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`
@@ -266,7 +266,7 @@ onDestroy(() => {
                         </button>
                         <button
                           on:click={() => tandaiSelesai(project.id)}
-                          class="w-full text-center bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition"
+                          class="mt-4 w-full text-center bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition"
                         >
                           Tandai Selesai
                          </button>
