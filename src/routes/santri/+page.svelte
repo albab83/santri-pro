@@ -114,7 +114,9 @@
   function bukaHalamanJurnal(projectId: string) {
     loadingJurnalId = projectId;
     goto(`/journal/${projectId}`);
-    loadingJurnalId = null;
+    setTimeout(() => {
+      loadingJurnalId = null;
+    }, 10000); // reset loading state after 1 detik
   }
 
   function openModal() {
