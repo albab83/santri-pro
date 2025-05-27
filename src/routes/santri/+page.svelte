@@ -14,6 +14,7 @@
 	let intervalId: any = null;
 	let loadingProjectId: string | null = null;
 	let loadingJurnalId: string | null = null;
+	let isInitialLoading = true;
 
 	const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -74,6 +75,8 @@
 			}
 		} catch (err) {
 			message = 'Gagal terhubung ke server';
+		} finally {
+			isInitialLoading = false;
 		}
 	}
 
@@ -112,8 +115,8 @@
 
 	async function bukaHalamanJurnal(projectId: string) {
 		loadingJurnalId = projectId;
-		await new Promise((resolve) => setTimeout(resolve, 10000)); // Simulasi loading
-		goto(`/journal/${projectId}`); // reset loading state after 1 detik
+		await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulasi loading
+		goto(`/journal/${projectId}`);
 	}
 
 	function openModal() {
@@ -155,7 +158,7 @@
 		token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 		fetchUser();
 		fetchMyProjects();
-		intervalId = setInterval(fetchMyProjects, 5000); // refresh tiap 10 detik
+		intervalId = setInterval(fetchMyProjects, 5000); // refresh tiap 5 detik
 	});
 
 	// Bersihkan interval saat komponen di-unmount
@@ -181,9 +184,13 @@
 						</svg>
 					</div>
 					<div>
-						<h1 class="text-[20px] sm:text-2xl md:text-3xl lg:text-3xl font-bold text-gray-900">
-							Assalamu'alaikum Selamat Datang {user?.nama}, di Self Project
-						</h1>
+						{#if user}
+							<h1 class="text-[20px] sm:text-2xl md:text-3xl lg:text-3xl font-bold text-gray-900">
+								Assalamu'alaikum Selamat Datang {user.nama}, di Self Project
+							</h1>
+						{:else}
+							<div class="shimmer h-8 w-96 rounded mb-2"></div>
+						{/if}
 						<p class="text-gray-600">Kelola dan ajukan project mandiri Anda</p>
 					</div>
 				</div>
@@ -222,7 +229,47 @@
 				</button>
 			</div>
 
-			{#if projects.length === 0}
+			{#if isInitialLoading}
+				<!-- Skeleton Loading untuk Project Cards -->
+				<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+					{#each Array(6) as _, i}
+						<div
+							class="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl p-6"
+						>
+							<div class="flex items-start justify-between mb-4">
+								<div class="flex-1">
+									<div class="shimmer h-6 w-3/4 rounded mb-3"></div>
+									<div class="shimmer h-5 w-20 rounded-full"></div>
+								</div>
+								<div class="shimmer w-6 h-6 rounded"></div>
+							</div>
+
+							<div class="space-y-3">
+								<div>
+									<div class="shimmer h-4 w-20 rounded mb-2"></div>
+									<div class="shimmer h-4 w-full rounded mb-1"></div>
+									<div class="shimmer h-4 w-3/4 rounded"></div>
+								</div>
+
+								<div>
+									<div class="shimmer h-4 w-16 rounded mb-2"></div>
+									<div class="shimmer h-4 w-full rounded mb-1"></div>
+									<div class="shimmer h-4 w-2/3 rounded"></div>
+								</div>
+
+								<div class="pt-3 border-t border-gray-200">
+									<div class="shimmer h-4 w-48 rounded"></div>
+								</div>
+
+								<div class="mt-4 space-y-2">
+									<div class="shimmer h-10 w-full rounded-lg"></div>
+									<div class="shimmer h-10 w-full rounded-lg"></div>
+								</div>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{:else if projects.length === 0}
 				<div class="text-center py-12">
 					<svg
 						class="w-16 h-16 text-gray-400 mx-auto mb-4"
@@ -317,26 +364,10 @@
 											disabled={loadingJurnalId === project.id || loadingProjectId === project.id}
 										>
 											{#if loadingJurnalId === project.id}
-												<svg
-													class="animate-spin h-5 w-5 inline mr-2"
-													fill="none"
-													viewBox="0 0 24 24"
-												>
-													<circle
-														class="opacity-25"
-														cx="12"
-														cy="12"
-														r="10"
-														stroke="currentColor"
-														stroke-width="4"
-													></circle>
-													<path
-														class="opacity-75"
-														fill="currentColor"
-														d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-													></path>
-												</svg>
-												Membuka...
+												<div class="flex items-center justify-center space-x-2">
+													<div class="shimmer w-5 h-5 rounded"></div>
+													<span>Membuka...</span>
+												</div>
 											{:else}
 												Buka Jurnal
 											{/if}
@@ -347,26 +378,10 @@
 											disabled={loadingProjectId === project.id}
 										>
 											{#if loadingProjectId === project.id}
-												<svg
-													class="animate-spin h-5 w-5 inline mr-2"
-													fill="none"
-													viewBox="0 0 24 24"
-												>
-													<circle
-														class="opacity-25"
-														cx="12"
-														cy="12"
-														r="10"
-														stroke="currentColor"
-														stroke-width="4"
-													></circle>
-													<path
-														class="opacity-75"
-														fill="currentColor"
-														d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-													></path>
-												</svg>
-												Menyelesaikan...
+												<div class="flex items-center justify-center space-x-2">
+													<div class="shimmer w-5 h-5 rounded"></div>
+													<span>Menyelesaikan...</span>
+												</div>
 											{:else}
 												Tandai Selesai
 											{/if}
@@ -581,27 +596,10 @@
 							class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:cursor-not-allowed"
 						>
 							{#if loading}
-								<svg
-									class="animate-spin h-4 w-4 text-white"
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-								>
-									<circle
-										class="opacity-25"
-										cx="12"
-										cy="12"
-										r="10"
-										stroke="currentColor"
-										stroke-width="4"
-									></circle>
-									<path
-										class="opacity-75"
-										fill="currentColor"
-										d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-									></path>
-								</svg>
-								<span>Mengirim...</span>
+								<div class="flex items-center space-x-2">
+									<div class="shimmer w-4 h-4 rounded"></div>
+									<span>Mengirim...</span>
+								</div>
 							{:else}
 								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path
@@ -620,3 +618,20 @@
 		</div>
 	</div>
 {/if}
+
+<style>
+	@keyframes shimmer {
+		0% {
+			background-position: -200px 0;
+		}
+		100% {
+			background-position: calc(200px + 100%) 0;
+		}
+	}
+
+	.shimmer {
+		background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+		background-size: 200px 100%;
+		animation: shimmer 1.5s infinite;
+	}
+</style>
