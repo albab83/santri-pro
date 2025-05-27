@@ -111,12 +111,10 @@
     }
   }
 
-  function bukaHalamanJurnal(projectId: string) {
+  async function bukaHalamanJurnal(projectId: string) {
     loadingJurnalId = projectId;
-    goto(`/journal/${projectId}`);
-    setTimeout(() => {
-      loadingJurnalId = null;
-    }, 30000); // reset loading state after 1 detik
+    await new Promise(resolve => setTimeout(resolve, 10000)); // Simulasi loading
+    goto(`/journal/${projectId}`); // reset loading state after 1 detik
   }
 
   function openModal() {
