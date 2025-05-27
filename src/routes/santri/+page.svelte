@@ -116,7 +116,7 @@
     goto(`/journal/${projectId}`);
     setTimeout(() => {
       loadingJurnalId = null;
-    }, 10000); // reset loading state after 1 detik
+    }, 30000); // reset loading state after 1 detik
   }
 
   function openModal() {
