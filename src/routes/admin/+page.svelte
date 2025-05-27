@@ -4,6 +4,7 @@
 	interface User {
 		nama: string;
 		email: string;
+		role: string;
 	}
 
 	interface Project {
