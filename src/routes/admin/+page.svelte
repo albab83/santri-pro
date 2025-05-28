@@ -162,6 +162,7 @@
 		fetchUsers();
 		socket = io(baseUrl, {
 			transports: ["websocket"],
+			secure: true,
 			reconnection: true,
 			auth: { token }
 		});
