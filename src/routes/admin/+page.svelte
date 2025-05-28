@@ -163,7 +163,8 @@
 		fetchProjects();
 		fetchUsers();
 		socket = io(baseUrl, {
-			auth: { token }
+			auth: { token },
+			transports: ['websocket']
 		});
 
 		socket.on('connect', () => {
@@ -183,7 +184,7 @@
 		});
 
 		socket.on('connect_error', (error) => {
-			// console.error('Socket connection error:', error);
+			console.error('Socket connection error:', error);
 		});
 	});
 	onDestroy(() => {
