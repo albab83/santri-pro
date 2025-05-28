@@ -182,6 +182,8 @@
 		});
 
 		socket.on('connect_error', (error) => {
+			console.error('Socket connection error:', error);
+		});
 	onDestroy(() => {
 		if (socket) socket.disconnect();
 	});
