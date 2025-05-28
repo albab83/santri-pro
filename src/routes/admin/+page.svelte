@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { io, Socket } from 'socket.io-client';
 
 	interface User {
 		nama: string;
@@ -20,13 +21,12 @@
 
 	let projects: Project[] = [];
 	let token: string | null = null;
-	let error = '';
+	let error: string = '';
 	let alasan: { [key: number]: string } = {};
 	let loadingId: number | null = null;
-	let intervalId: number | undefined;
 	let users: User[] = [];
 
-	let ws: WebSocket | null = null;
+	let socket: Socket | null = null;
 	const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 	async function fetchUsers() {
@@ -93,36 +93,6 @@
 		});
 	}
 
-	onMount(() => {
-		token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-		fetchProjects();
-		fetchUsers();
-		ws = new WebSocket(`ws:${baseUrl}`);
-		ws.onopen = () => {
-			if (token) {
-				ws?.send(JSON.stringify({ type: 'subscribe', token }));
-			}
-		};
-		ws.onmessage = (event) => {
-			const data = JSON.parse(event.data);
-			if (data.type === 'project_update') {
-				fetchProjects();
-			} else if (data.type === 'user_update') {
-				fetchUsers();
-			}
-		};
-		ws.onerror = (error) => {
-			console.error('WebSocket error:', error);
-		};
-		ws.onclose = () => {
-			console.log('WebSocket connection closed');
-		};
-	});
-
-	onDestroy(() => {
-		if (ws) ws.close();
-	});
-
 	async function fetchProjects() {
 		error = '';
 		try {
@@ -132,9 +102,13 @@
 			if (!res.ok) throw new Error('Gagal mengambil data project');
 			projects = await res.json();
 		} catch (err) {
-			error = err instanceof Error ? err.message : String(err);
+			error = err instanceof globalThis.Error ? err.message : String(err);
 		}
 	}
+
+	
+
+	// Removed unused onDestroy block for ws (no ws variable defined)
 
 	async function approve(id: number) {
 		if (!token) return;
@@ -181,6 +155,36 @@
 			loadingId = null;
 		}
 	}
+
+	onMount(() => {
+		token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+		fetchProjects();
+		fetchUsers();
+		socket = io(baseUrl, {
+			transports: ['websocket'],
+			auth: { token }
+		});
+
+		socket.on('connect', () => {
+			console.log('Socket connected');
+		});
+
+		socket.on('project_update', () => {
+			fetchProjects();
+		});
+
+		socket.on('user_update', () => {
+			fetchUsers();
+		});
+
+		socket.on('disconnect', () => {
+			console.log('Socket disconnected');
+		});
+
+		socket.on('connect_error', (error) => {
+	onDestroy(() => {
+		if (socket) socket.disconnect();
+	});
 </script>
 
 <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
