@@ -30,6 +30,7 @@
 	const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 	async function fetchUsers() {
+		if (!token) return;
 		try {
 			const res = await fetch(`${baseUrl}/api/users`, {
 				headers: { Authorization: `Bearer ${token}` }
@@ -37,6 +38,7 @@
 			if (!res.ok) throw new Error('Gagal mengambil data user');
 			users = await res.json();
 		} catch (err) {
+			error = err instanceof Error ? err.message : String(err);
 			// Optional: handle error
 		}
 	}
@@ -161,9 +163,6 @@
 		fetchProjects();
 		fetchUsers();
 		socket = io(baseUrl, {
-			transports: ["polling"],
-			secure: true,
-			reconnection: true,
 			auth: { token }
 		});
 
