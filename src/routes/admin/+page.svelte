@@ -25,6 +25,8 @@
 	let loadingId: number | null = null;
 	let intervalId: number | undefined;
 	let users: User[] = [];
+
+	let ws: WebSocket | null = null;
 	const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 	async function fetchUsers() {
@@ -95,11 +97,30 @@
 		token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 		fetchProjects();
 		fetchUsers();
-		intervalId = setInterval(fetchProjects, 10000); // refresh tiap 10 detik
+		ws = new WebSocket(`ws:${baseUrl}`);
+		ws.onopen = () => {
+			if (token) {
+				ws?.send(JSON.stringify({ type: 'subscribe', token }));
+			}
+		};
+		ws.onmessage = (event) => {
+			const data = JSON.parse(event.data);
+			if (data.type === 'project_update') {
+				fetchProjects();
+			} else if (data.type === 'user_update') {
+				fetchUsers();
+			}
+		};
+		ws.onerror = (error) => {
+			console.error('WebSocket error:', error);
+		};
+		ws.onclose = () => {
+			console.log('WebSocket connection closed');
+		};
 	});
 
 	onDestroy(() => {
-		clearInterval(intervalId);
+		if (ws) ws.close();
 	});
 
 	async function fetchProjects() {
