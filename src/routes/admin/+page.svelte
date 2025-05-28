@@ -163,7 +163,8 @@
 		fetchProjects();
 		fetchUsers();
 		socket = io(baseUrl, {
-			auth: { token }
+			auth: { token },
+			reconnectionAttempts: 5
 		});
 
 		socket.on('connect', () => {
