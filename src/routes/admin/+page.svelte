@@ -161,7 +161,7 @@
 		fetchProjects();
 		fetchUsers();
 		socket = io(baseUrl, {
-			transports: ["websocket"],
+			transports: ["polling"],
 			secure: true,
 			reconnection: true,
 			auth: { token }
