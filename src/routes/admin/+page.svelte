@@ -161,7 +161,6 @@
 		fetchProjects();
 		fetchUsers();
 		socket = io(baseUrl, {
-			transports: ['websocket'],
 			auth: { token }
 		});
 
