@@ -43,6 +43,7 @@
 		}
 	}
 
+
 	// Statistics computed from projects
 	$: stats = {
 		totalSantri: users.filter((u) => u.role === 'santri').length,
@@ -108,8 +109,6 @@
 		}
 	}
 
-	
-
 	// Removed unused onDestroy block for ws (no ws variable defined)
 
 	async function approve(id: number) {
@@ -163,12 +162,11 @@
 		fetchProjects();
 		fetchUsers();
 		socket = io(baseUrl, {
-			auth: { token },
-			reconnectionAttempts: 3
+			auth: { token }
 		});
 
 		socket.on('connect', () => {
-			// console.log('Socket connected');
+			console.log('Socket connected');
 		});
 
 		socket.on('project_update', () => {
@@ -393,6 +391,7 @@
 								{/if}
 							{/each}
 						</svg>
+						
 						<div class="absolute inset-0 flex items-center justify-center">
 							<div class="text-center">
 								<div class="text-3xl font-bold text-gray-900">{stats.totalProject}</div>

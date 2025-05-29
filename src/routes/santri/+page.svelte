@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { io, Socket } from 'socket.io-client';
 
 	let judul = '';
 	let deskripsi = '';
@@ -15,6 +16,7 @@
 	let loadingProjectId: string | null = null;
 	let loadingJurnalId: string | null = null;
 	let isInitialLoading = true;
+	let socket: Socket | null = null;
 
 	const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -157,9 +159,27 @@
 		token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 		fetchUser();
 		fetchMyProjects();
-		intervalId = setInterval(fetchMyProjects, 5000); // refresh tiap 5 detik
+
+		socket = io(baseUrl, {
+			auth: { token }
+		});
+
+		socket.on('connect', () => {
+			console.log('Socket connected');
+		});
+
+		socket.on('project_update', () => {
+			fetchMyProjects();
+		});
+
+		socket.on('disconnect', () => {
+			console.log('Socket disconnected');
+		});
 	});
 
+	onDestroy(() => {
+		if (socket) socket.disconnect();
+	});
 	// Bersihkan interval saat komponen di-unmount
 	onDestroy(() => {
 		clearInterval(intervalId);
