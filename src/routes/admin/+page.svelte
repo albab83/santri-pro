@@ -164,7 +164,7 @@
 		fetchUsers();
 		socket = io(baseUrl, {
 			auth: { token },
-			// reconnectionAttempts: 1
+			reconnectionAttempts: 3
 		});
 
 		socket.on('connect', () => {
