@@ -191,8 +191,8 @@
 									</td>
 									<td class="px-4 py-3">
 										<!-- Aksi: detail, dsb -->
-										<a href={`/admin/project/${p.id}`} class="text-blue-600 hover:underline text-sm"
-											>Detail</a
+										<a href={`/journal/${p.id}`} class="text-blue-600 hover:underline text-sm"
+											>Journal</a
 										>
 									</td>
 								</tr>

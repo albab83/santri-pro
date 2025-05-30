@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { io, Socket } from 'socket.io-client';
+	import { goto } from '$app/navigation';
 
 	interface User {
 		nama: string;
@@ -42,7 +43,6 @@
 			// Optional: handle error
 		}
 	}
-
 
 	// Statistics computed from projects
 	$: stats = {
@@ -391,7 +391,7 @@
 								{/if}
 							{/each}
 						</svg>
-						
+
 						<div class="absolute inset-0 flex items-center justify-center">
 							<div class="text-center">
 								<div class="text-3xl font-bold text-gray-900">{stats.totalProject}</div>
@@ -418,6 +418,23 @@
 				</div>
 			</div>
 		{/if}
+
+		<div class="mb-8">
+			<button
+				on:click={() => goto('/project')}
+				class="w-full md:w-auto flex items-center justify-center space-x-3 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white font-semibold px-6 py-4 rounded-2xl shadow-lg transition-all duration-200"
+			>
+				<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+					/>
+				</svg>
+				<span class="text-lg">Lihat Semua Project</span>
+			</button>
+		</div>
 
 		<!-- Project List -->
 		<div class="bg-white rounded-2xl shadow-xl p-8">

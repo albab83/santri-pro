@@ -188,6 +188,7 @@
 
 <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
 	<div class="max-w-6xl mx-auto">
+		
 		<!-- Header -->
 		<div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
 			<div class="flex items-center justify-between">

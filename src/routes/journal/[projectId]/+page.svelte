@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
+	import { io, Socket } from 'socket.io-client';
 
 	interface Journal {
 		id: number | string;
@@ -21,13 +22,37 @@
 	let projectName = '';
 	let editId: string | number | null = null;
 	let formEl: HTMLFormElement | null = null; // referensi DOM form
-
+	let userRole = '';
+	let ownerName = '';
+	let socket: Socket | null = null;
 	const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 	onMount(async () => {
 		if (!browser) return;
 		projectId = $page.params.projectId;
+		userRole = localStorage.getItem('role') || '';
 		await loadJournals();
+
+		socket = io(baseUrl, {
+			auth: { token: localStorage.getItem('token') }
+		});
+
+		socket.on('connect', () => {
+			console.log('Socket connected');
+		});
+
+		socket.on('journal_update', () => {
+			console.log('Received journal_update');
+			loadJournals();
+		});
+
+		socket.on('disconnect', () => {
+			console.log('Socket disconnected');
+		});
+	});
+
+	onDestroy(() => {
+		if (socket) socket.disconnect();
 	});
 
 	function scrollToForm() {
@@ -54,6 +79,7 @@
 			const data = await res.json();
 			if (res.ok) {
 				projectName = data.projectTitle || '';
+				ownerName = data.userName || '';
 				journals = data.journals || [];
 			} else {
 				error = data.message || 'Gagal memuat jurnal';
@@ -153,139 +179,143 @@
 					</svg>
 				</div>
 				<div>
-					<h1 class="text-3xl font-bold text-gray-900">Jurnal Project</h1>
+					<h1 class="capitalize text-3xl font-bold text-gray-900">
+						Jurnal Project Dari {ownerName}
+					</h1>
 					<p class="text-lg text-gray-600">{projectName || 'Loading...'}</p>
 				</div>
 			</div>
 		</div>
 
 		<!-- Form Jurnal -->
-		<div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-			<div class="flex items-center space-x-3 mb-6">
-				<svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-					/>
-				</svg>
-				<h2 class="text-2xl font-bold text-gray-900">Tulis Jurnal Baru</h2>
-			</div>
-
-			<form onsubmit={kirimJurnal} bind:this={formEl} class="space-y-6">
-				<div>
-					<label for="isi" class="block text-sm font-medium text-gray-700 mb-2">Isi Jurnal</label>
-					<textarea
-						class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors resize-none"
-						rows="6"
-						placeholder="Ceritakan progress, tantangan, atau pencapaian hari ini..."
-						bind:value={isi}
-						required
-					></textarea>
+		{#if userRole === 'admin'}
+			<div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+				<div class="flex items-center space-x-3 mb-6">
+					<svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+						/>
+					</svg>
+					<h2 class="text-2xl font-bold text-gray-900">Tulis Jurnal Baru</h2>
 				</div>
 
-				<div>
-					<label for="status" class="block text-sm font-medium text-gray-700 mb-2"
-						>Status (Opsional)</label
-					>
-					<select
-						class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
-						bind:value={status}
-					>
-						<option value="">Pilih status...</option>
-						<option value="berlangsung">Berlangsung</option>
-						<option value="selesai">Selesai</option>
-						<option value="menunggu">Menunggu</option>
-						<option value="terhambat">Terhambat</option>
-					</select>
-				</div>
+				<form onsubmit={kirimJurnal} bind:this={formEl} class="space-y-6">
+					<div>
+						<label for="isi" class="block text-sm font-medium text-gray-700 mb-2">Isi Jurnal</label>
+						<textarea
+							class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors resize-none"
+							rows="6"
+							placeholder="Ceritakan progress, tantangan, atau pencapaian hari ini..."
+							bind:value={isi}
+							required
+						></textarea>
+					</div>
 
-				<div class="flex items-center space-x-4">
-					<button
-						type="submit"
-						disabled={loading}
-						class="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:cursor-not-allowed"
-					>
-						{#if loading}
-							<svg
-								class="animate-spin h-5 w-5 text-white"
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-							>
-								<circle
-									class="opacity-25"
-									cx="12"
-									cy="12"
-									r="10"
+					<div>
+						<label for="status" class="block text-sm font-medium text-gray-700 mb-2"
+							>Status (Opsional)</label
+						>
+						<select
+							class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+							bind:value={status}
+						>
+							<option value="">Pilih status...</option>
+							<option value="berlangsung">Berlangsung</option>
+							<option value="selesai">Selesai</option>
+							<option value="menunggu">Menunggu</option>
+							<option value="terhambat">Terhambat</option>
+						</select>
+					</div>
+
+					<div class="flex items-center space-x-4">
+						<button
+							type="submit"
+							disabled={loading}
+							class="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:cursor-not-allowed"
+						>
+							{#if loading}
+								<svg
+									class="animate-spin h-5 w-5 text-white"
+									xmlns="http://www.w3.org/2000/svg"
+									fill="none"
+									viewBox="0 0 24 24"
+								>
+									<circle
+										class="opacity-25"
+										cx="12"
+										cy="12"
+										r="10"
+										stroke="currentColor"
+										stroke-width="4"
+									></circle>
+									<path
+										class="opacity-75"
+										fill="currentColor"
+										d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+									></path>
+								</svg>
+								<span>Mengirim...</span>
+							{:else}
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+									/>
+								</svg>
+								<span> {editId ? 'Update Jurnal' : 'Kirim Jurnal'}</span>
+							{/if}
+						</button>
+					</div>
+
+					{#if message}
+						<div class="rounded-lg p-4 bg-green-50 border border-green-200">
+							<div class="flex items-center">
+								<svg
+									class="h-5 w-5 text-green-400 mr-2"
+									fill="none"
 									stroke="currentColor"
-									stroke-width="4"
-								></circle>
-								<path
-									class="opacity-75"
-									fill="currentColor"
-									d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-								></path>
-							</svg>
-							<span>Mengirim...</span>
-						{:else}
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-								/>
-							</svg>
-							<span> {editId ? 'Update Jurnal' : 'Kirim Jurnal'}</span>
-						{/if}
-					</button>
-				</div>
-
-				{#if message}
-					<div class="rounded-lg p-4 bg-green-50 border border-green-200">
-						<div class="flex items-center">
-							<svg
-								class="h-5 w-5 text-green-400 mr-2"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-								/>
-							</svg>
-							<p class="text-sm text-green-800">{message}</p>
+									viewBox="0 0 24 24"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+									/>
+								</svg>
+								<p class="text-sm text-green-800">{message}</p>
+							</div>
 						</div>
-					</div>
-				{/if}
+					{/if}
 
-				{#if error}
-					<div class="rounded-lg p-4 bg-red-50 border border-red-200">
-						<div class="flex items-center">
-							<svg
-								class="h-5 w-5 text-red-400 mr-2"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-								/>
-							</svg>
-							<p class="text-sm text-red-800">{error}</p>
+					{#if error}
+						<div class="rounded-lg p-4 bg-red-50 border border-red-200">
+							<div class="flex items-center">
+								<svg
+									class="h-5 w-5 text-red-400 mr-2"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+									/>
+								</svg>
+								<p class="text-sm text-red-800">{error}</p>
+							</div>
 						</div>
-					</div>
-				{/if}
-			</form>
-		</div>
+					{/if}
+				</form>
+			</div>
+		{/if}
 
 		<!-- Riwayat Jurnal -->
 		<div class="bg-white rounded-2xl shadow-xl p-8">
@@ -368,21 +398,23 @@
 										{/if}
 									</div>
 								</div>
-								<button onclick={() => startEdit(journal)} aria-label="Edit jurnal">
-									<svg
-										class="w-5 h-5 text-gray-400"
-										fill="none"
-										stroke="currentColor"
-										viewBox="0 0 24 24"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-										/>
-									</svg>
-								</button>
+								{#if userRole === 'admin'}
+									<button onclick={() => startEdit(journal)} aria-label="Edit jurnal">
+										<svg
+											class="w-5 h-5 text-gray-400"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+											/>
+										</svg>
+									</button>
+								{/if}
 							</div>
 
 							<div class="prose prose-sm max-w-none">
