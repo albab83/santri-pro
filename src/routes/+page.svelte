@@ -21,6 +21,8 @@
 
 			if (res.ok) {
 				localStorage.setItem('token', data.token);
+				localStorage.setItem('user', JSON.stringify(data.user));
+				localStorage.setItem('role', data.user.role);
 				message = 'Login berhasil!';
 				setTimeout(() => {
 					if (data.user && data.user.role === 'admin') {
@@ -256,7 +258,7 @@
 			<!-- Additional Links -->
 			<div class="text-center space-y-4 pt-4 border-t border-gray-200">
 				<a
-					href="/forgot-password"
+					href="/lupa-password"
 					class="text-sm text-blue-600 hover:text-blue-800 hover:underline"
 				>
 					Lupa password?

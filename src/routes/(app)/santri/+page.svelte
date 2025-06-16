@@ -2,6 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { io, Socket } from 'socket.io-client';
+	import { fade } from 'svelte/transition';
 
 	let judul = '';
 	let deskripsi = '';
@@ -17,6 +18,11 @@
 	let loadingJurnalId: string | null = null;
 	let isInitialLoading = true;
 	let socket: Socket | null = null;
+	let showLoginAlert = false;
+
+
+
+
 
 	const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -54,11 +60,8 @@
 			});
 			if (res.ok) {
 				user = await res.json();
-				console.log(user);
 			}
 		} catch (err) {
-			console.error('Error fetching user:', err);
-			// Optional: handle error
 		}
 	}
 
@@ -99,13 +102,18 @@
 			if (res.ok) {
 				message = 'Proposal berhasil dikirim!';
 				judul = deskripsi = tujuan = '';
-				fetchMyProjects(); // refresh list
+				setTimeout(() => {
+					message = '';
+				}, 2000);
 				setTimeout(() => {
 					showModal = false;
-					message = '';
 				}, 1500);
+				fetchMyProjects(); // refresh list
 			} else {
 				message = data.message || 'Gagal mengirim proposal';
+				setTimeout(() => {
+					message = '';
+				}, 2000);
 			}
 		} catch (err) {
 			message = 'Terjadi kesalahan koneksi';
@@ -116,8 +124,29 @@
 
 	async function bukaHalamanJurnal(projectId: string) {
 		loadingJurnalId = projectId;
-		await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulasi loading
-		goto(`/journal/${projectId}`);
+		try {
+			// Panggil endpoint untuk set status ke proses
+			const res = await fetch(`${baseUrl}/api/project/${projectId}/proses`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`
+				}
+			});
+			const data = await res.json();
+			if (!res.ok) {
+				message = data.message || 'Gagal mengubah status project';
+				loadingJurnalId = null;
+				return;
+			}
+			// Optional: refresh project list jika perlu
+			await fetchMyProjects();
+			goto(`/journal/${projectId}`);
+		} catch (err) {
+			message = 'Terjadi kesalahan koneksi';
+		} finally {
+			loadingJurnalId = null;
+		}
 	}
 
 	function openModal() {
@@ -135,15 +164,19 @@
 		switch (status?.toLowerCase()) {
 			case 'approved':
 			case 'diterima':
-				return 'text-green-100 bg-green-600';
+				return 'text-green-700 bg-green-100'; // Hijau lembut, teks gelap
 			case 'rejected':
 			case 'ditolak':
-				return 'text-red-700 bg-red-100';
+				return 'text-red-700 bg-red-100'; // Merah lembut, teks gelap
 			case 'pending':
 			case 'menunggu':
-				return 'text-yellow-100 bg-yellow-600';
+				return 'text-yellow-800 bg-yellow-100'; // Kuning lembut, teks gelap
+			case 'selesai':
+				return 'text-blue-700 bg-blue-100'; // Biru lembut, teks gelap
+			case 'proses':
+				return 'text-indigo-700 bg-indigo-100'; // Indigo lembut, teks gelap
 			default:
-				return 'text-gray-700 bg-gray-100';
+				return 'text-gray-700 bg-gray-100'; // Netral
 		}
 	}
 
@@ -155,8 +188,21 @@
 		});
 	}
 
+	function handleLogout() {
+		localStorage.removeItem('token');
+		localStorage.removeItem('user');
+		localStorage.removeItem('role');
+		goto('/');
+	}
+
 	onMount(() => {
 		token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+		if (!token) {
+			showLoginAlert = true;
+			return;
+		}
+
 		fetchUser();
 		fetchMyProjects();
 
@@ -187,8 +233,36 @@
 </script>
 
 <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+	{#if showLoginAlert}
+		<div class="fixed inset-0 flex items-center justify-center z-50 bg-black" transition:fade>
+			<div class="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full text-center">
+				<svg
+					class="mx-auto mb-4 w-12 h-12 text-red-500"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+					/>
+				</svg>
+				<h2 class="text-xl font-bold text-gray-900 mb-2">Akses Ditolak</h2>
+				<p class="text-gray-600 mb-6">
+					Anda belum login. Silakan login terlebih dahulu untuk mengakses halaman ini.
+				</p>
+				<button
+					on:click={() => goto('/')}
+					class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition"
+				>
+					Login Sekarang
+				</button>
+			</div>
+		</div>
+	{/if}
 	<div class="max-w-6xl mx-auto">
-		
 		<!-- Header -->
 		<div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
 			<div class="flex items-center justify-between">
@@ -205,8 +279,11 @@
 					</div>
 					<div>
 						{#if user}
-							<h1 class="text-[20px] sm:text-2xl md:text-3xl lg:text-3xl font-bold text-gray-900">
-								Assalamu'alaikum Selamat Datang {user.nama}, di Self Project
+							<h1
+								class="text-[20px] sm:text-2xl md:text-3xl lg:text-3xl font-bold text-gray-900 capitalize"
+							>
+								Assalamu'alaikum Selamat Datang <span class="text-blue-600">{user.nama}</span>, di
+								Self Project
 							</h1>
 						{:else}
 							<div class="shimmer h-8 w-96 rounded mb-2"></div>
@@ -318,17 +395,13 @@
 					{#each projects as project}
 						<div
 							class="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-200"
+							transition:fade
 						>
 							<div class="flex items-start justify-between mb-4">
 								<div class="flex-1">
-									<h3 class="text-lg font-semibold text-gray-900 mb-2">{project.judul}</h3>
-									<span
-										class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getStatusColor(
-											project.status
-										)}"
-									>
-										{project.status}
-									</span>
+									<h3 class="text-lg font-semibold text-gray-900 mb-2 uppercase">
+										{project.judul}
+									</h3>
 								</div>
 								<svg
 									class="w-6 h-6 text-gray-400"
@@ -355,6 +428,16 @@
 									<p class="text-sm font-medium text-gray-700 mb-1">Tujuan:</p>
 									<p class="text-sm text-gray-600 line-clamp-2">{project.tujuan}</p>
 								</div>
+								<div class="pt-4 flex justify-end">
+									<span
+										class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getStatusColor(
+											project.status
+										)}"
+									>
+										{project.status}
+									</span>
+								</div>
+
 								{#if project.status?.toLowerCase() === 'ditolak' || project.status?.toLowerCase() === 'rejected'}
 									<div>
 										<p class="text-sm font-medium text-red-700 mb-1">Alasan Penolakan:</p>
@@ -362,6 +445,7 @@
 									</div>
 								{/if}
 
+								<!--bagian tanggal pengajuan  -->
 								<div class="pt-3 border-t border-gray-200">
 									<div class="flex items-center text-xs text-gray-500">
 										<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -376,7 +460,7 @@
 									</div>
 								</div>
 
-								{#if project.status?.toLowerCase() === 'diterima' || project.status?.toLowerCase() === 'approved'}
+								{#if project.status?.toLowerCase() === 'diterima' || project.status?.toLowerCase() === 'proses'}
 									<div class="mt-4">
 										<button
 											on:click={() => bukaHalamanJurnal(project.id)}
@@ -455,7 +539,8 @@
 
 <!-- Modal -->
 {#if showModal}
-	<div class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+	<div class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" transition:fade>
+		<!-- Modal Content -->
 		<div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl h-9/10 overflow-y-auto">
 			<!-- Modal Header -->
 			<div class="flex items-center justify-between p-6 border-b border-gray-200">
@@ -599,6 +684,7 @@
 							class="rounded-lg p-4 {message.includes('berhasil')
 								? 'bg-green-50 border border-green-200'
 								: 'bg-red-50 border border-red-200'}"
+							transition:fade
 						>
 							<div class="flex items-center">
 								{#if message.includes('berhasil')}

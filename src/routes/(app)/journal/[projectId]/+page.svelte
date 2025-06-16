@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
 	import { browser } from '$app/environment';
 	import { io, Socket } from 'socket.io-client';
+	import { fade } from 'svelte/transition';
 
 	interface Journal {
 		id: number | string;
@@ -12,7 +13,7 @@
 		// Tambahkan field lain jika perlu
 	}
 
-	let journals: Journal[] = [];
+	let journals: any = [];
 	let isi = '';
 	let status = '';
 	let message = '';
@@ -41,11 +42,13 @@
 			console.log('Socket connected');
 		});
 
-		socket.on('journal_update', () => {
-			console.log('Received journal_update');
+		socket.on('journal_read', () => {
 			loadJournals();
 		});
-
+		socket.on('journal_update', () => {
+			loadJournals();
+		});
+		
 		socket.on('disconnect', () => {
 			console.log('Socket disconnected');
 		});
@@ -95,6 +98,7 @@
 		if (event) event.preventDefault();
 		message = '';
 		error = '';
+		loading = true;
 		try {
 			const token = localStorage.getItem('token');
 			const method = editId ? 'PUT' : 'POST';
@@ -123,11 +127,17 @@
 				status = '';
 				editId = null;
 				await loadJournals();
+
+				setTimeout(() => {
+					message = '';
+				}, 2000);
 			} else {
 				error = data.message || 'Gagal menyimpan jurnal';
 			}
 		} catch (e) {
 			error = 'Terjadi kesalahan saat menyimpan jurnal';
+		} finally {
+			loading = false;
 		}
 	}
 
@@ -188,7 +198,7 @@
 		</div>
 
 		<!-- Form Jurnal -->
-		{#if userRole === 'admin'}
+		{#if userRole === 'santri'}
 			<div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
 				<div class="flex items-center space-x-3 mb-6">
 					<svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -270,10 +280,23 @@
 								<span> {editId ? 'Update Jurnal' : 'Kirim Jurnal'}</span>
 							{/if}
 						</button>
+						{#if editId}
+							<button
+								type="button"
+								onclick={() => {
+									editId = null;
+									isi = '';
+									status = '';
+								}}
+								class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-6 rounded-lg transition-colors duration-200"
+							>
+								Batal
+							</button>
+						{/if}
 					</div>
 
 					{#if message}
-						<div class="rounded-lg p-4 bg-green-50 border border-green-200">
+						<div class="rounded-lg p-4 bg-green-50 border border-green-200" transition:fade>
 							<div class="flex items-center">
 								<svg
 									class="h-5 w-5 text-green-400 mr-2"
@@ -354,73 +377,83 @@
 				</div>
 			{:else if journals.length === 0}
 				<div class="text-center py-12">
-					<svg
-						class="w-16 h-16 text-gray-400 mx-auto mb-4"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-						/>
-					</svg>
-					<h3 class="text-lg font-medium text-gray-900 mb-2">Belum ada jurnal</h3>
-					<p class="text-gray-600">Mulai tulis jurnal pertama Anda untuk project ini!</p>
+					{#if userRole === 'admin'}
+						<h3 class="text-lg font-medium text-gray-900 mb-2">Belum ada jurnal</h3>
+						<p class="text-gray-600">Santri belum menulis jurnal untuk project ini!</p>
+					{:else}
+						<svg
+							class="w-16 h-16 text-gray-400 mx-auto mb-4"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+							/>
+						</svg>
+						<h3 class="text-lg font-medium text-gray-900 mb-2">Belum ada jurnal</h3>
+						<p class="text-gray-600">Mulai tulis jurnal pertama Anda untuk project ini!</p>
+					{/if}
 				</div>
 			{:else}
 				<div class="space-y-6">
-					{#each journals as journal, index}
-						<div
-							class="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-200"
-						>
-							<div class="flex items-start justify-between mb-4">
-								<div class="flex items-center space-x-3">
-									<div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-										<span class="text-sm font-semibold text-blue-600"
-											>#{journals.length - index}</span
+					{#each journals as journal, index (journal.id)}
+						{#key journal.id}
+							<div
+								class="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-200"
+								transition:fade={{ duration: 10000 }}
+							>
+								<div class="flex items-start justify-between mb-4">
+									<div class="flex items-center space-x-3">
+										<div
+											class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center"
 										>
-									</div>
-									<div>
-										<p class="text-sm font-medium text-gray-900">
-											{formatDate(journal.created_at)}
-										</p>
-										{#if journal.status}
-											<span
-												class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {getStatusColor(
-													journal.status
-												)} mt-1"
+											<span class="text-sm font-semibold text-blue-600"
+												>#{journals.length - index}</span
 											>
-												{journal.status}
-											</span>
-										{/if}
+										</div>
+										<div>
+											<p class="text-sm font-medium text-gray-900">
+												{formatDate(journal.created_at)}
+											</p>
+											{#if journal.status}
+												<span
+													class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {getStatusColor(
+														journal.status
+													)} mt-1"
+												>
+													{journal.status}
+												</span>
+											{/if}
+										</div>
 									</div>
+									{#if userRole === 'santri'}
+										<button onclick={() => startEdit(journal)} aria-label="Edit jurnal">
+											<svg
+												class="w-5 h-5 text-gray-400"
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+												/>
+											</svg>
+										</button>
+									{/if}
 								</div>
-								{#if userRole === 'admin'}
-									<button onclick={() => startEdit(journal)} aria-label="Edit jurnal">
-										<svg
-											class="w-5 h-5 text-gray-400"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-											/>
-										</svg>
-									</button>
-								{/if}
-							</div>
 
-							<div class="prose prose-sm max-w-none">
-								<p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{journal.isi}</p>
+								<div class="prose prose-sm max-w-none">
+									<p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{journal.isi}</p>
+								</div>
 							</div>
-						</div>
+						{/key}
 					{/each}
 				</div>
 			{/if}

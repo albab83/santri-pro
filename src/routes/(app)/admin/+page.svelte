@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { scale, fade, slide } from 'svelte/transition';
 	import { io, Socket } from 'socket.io-client';
 	import { goto } from '$app/navigation';
 
@@ -26,9 +27,15 @@
 	let alasan: { [key: number]: string } = {};
 	let loadingId: number | null = null;
 	let users: User[] = [];
+	let showMenu = false;
+	let menuRef: HTMLDivElement | null = null;
 
 	let socket: Socket | null = null;
 	const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
+	function toggleMenu() {
+		showMenu = !showMenu;
+	}
 
 	async function fetchUsers() {
 		if (!token) return;
@@ -59,15 +66,17 @@
 		).length,
 		projectSelesai: projects.filter(
 			(p) => p.status.toLowerCase() === 'selesai' || p.status.toLowerCase() === 'completed'
-		).length
+		).length,
+		projectProses: projects.filter((p) => p.status.toLowerCase() === 'proses').length
 	};
 
 	// Chart data for simple pie chart
 	$: chartData = [
-		{ label: 'Diterima', value: stats.projectDiterima, color: '#10B981' },
-		{ label: 'Menunggu', value: stats.projectMenunggu, color: '#F59E0B' },
-		{ label: 'Ditolak', value: stats.projectDitolak, color: '#EF4444' },
-		{ label: 'Selesai', value: stats.projectSelesai, color: '#14B8A6' }
+		{ label: 'Diterima', value: stats.projectDiterima, color: '#047857' }, // text-green-700
+		{ label: 'Menunggu', value: stats.projectMenunggu, color: '#92400E' }, // text-yellow-800
+		{ label: 'Ditolak', value: stats.projectDitolak, color: '#B91C1C' }, // text-red-700
+		{ label: 'Selesai', value: stats.projectSelesai, color: '#1D4ED8' }, // text-blue-700
+		{ label: 'Proses', value: stats.projectProses, color: '#4338CA' } // text-indigo-700
 	];
 
 	function getStatusColor(status: string) {
@@ -208,14 +217,14 @@
 					</div>
 					<div>
 						<h1 class="text-3xl font-bold text-gray-900">Persetujuan Project</h1>
-						<p class="text-gray-600">Kelola pengajuan project dari anggota</p>
+						<p class="text-gray-600">Kelola pengajuan project dari santri</p>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<!-- Statistics Cards -->
-		<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-8">
+		<!-- Statistics Cards  -->
+		<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-6 mb-8">
 			<div class="bg-white rounded-xl shadow-lg p-6">
 				<div class="flex items-center">
 					<div class="p-2 bg-blue-100 rounded-lg">
@@ -228,8 +237,7 @@
 							<path
 								stroke-linecap="round"
 								stroke-linejoin="round"
-								stroke-width="2"
-								d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+								d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
 							/>
 						</svg>
 					</div>
@@ -252,8 +260,7 @@
 							<path
 								stroke-linecap="round"
 								stroke-linejoin="round"
-								stroke-width="2"
-								d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+								d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0M12 12.75h.008v.008H12v-.008Z"
 							/>
 						</svg>
 					</div>
@@ -276,8 +283,7 @@
 							<path
 								stroke-linecap="round"
 								stroke-linejoin="round"
-								stroke-width="2"
-								d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+								d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75"
 							/>
 						</svg>
 					</div>
@@ -300,8 +306,7 @@
 							<path
 								stroke-linecap="round"
 								stroke-linejoin="round"
-								stroke-width="2"
-								d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+								d="M8.242 5.992h12m-12 6.003H20.24m-12 5.999h12M4.117 7.495v-3.75H2.99m1.125 3.75H2.99m1.125 0H5.24m-1.92 2.577a1.125 1.125 0 1 1 1.591 1.59l-1.83 1.83h2.16M2.99 15.745h1.125a1.125 1.125 0 0 1 0 2.25H3.74m0-.002h.375a1.125 1.125 0 0 1 0 2.25H2.99"
 							/>
 						</svg>
 					</div>
@@ -316,12 +321,7 @@
 				<div class="flex items-center">
 					<div class="p-2 bg-red-100 rounded-lg">
 						<svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-							/>
+							<path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
 						</svg>
 					</div>
 					<div class="ml-4">
@@ -330,6 +330,30 @@
 					</div>
 				</div>
 			</div>
+
+			<div class="bg-white rounded-xl shadow-lg p-6">
+				<div class="flex items-center">
+					<div class="p-2 bg-yellow-100 rounded-lg">
+						<svg
+							class="w-6 h-6 text-yellow-600"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+							/>
+						</svg>
+					</div>
+					<div class="ml-4">
+						<p class="text-sm font-medium text-gray-600">Proses</p>
+						<p class="text-2xl font-bold text-gray-900">{stats.projectProses}</p>
+					</div>
+				</div>
+			</div>
+
 			<div class="bg-white rounded-xl shadow-lg p-6">
 				<div class="flex items-center">
 					<div class="p-2 bg-emerald-100 rounded-lg">
@@ -339,12 +363,7 @@
 							stroke="currentColor"
 							viewBox="0 0 24 24"
 						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M5 13l4 4L19 7"
-							/>
+							<path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
 						</svg>
 					</div>
 					<div class="ml-4">
@@ -499,7 +518,7 @@
 						>
 							<div class="flex items-start justify-between mb-4">
 								<div class="flex-1">
-									<h3 class="text-lg font-semibold text-gray-900 mb-2">{p.judul}</h3>
+									<h3 class="text-lg font-semibold text-gray-900 mb-2 uppercase">{p.judul}</h3>
 									<div class="flex items-center space-x-3">
 										<span
 											class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getStatusColor(
